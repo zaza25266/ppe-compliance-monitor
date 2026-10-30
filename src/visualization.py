@@ -1,61 +1,56 @@
-
-# src/visualization.py
-# Purpose: Draw person and PPE detections on RGB images so both
-# image and video workflows can reuse the same visualization logic.
+# Purpose: Draw person and PPE bounding boxes on RGB images.
 
 import cv2
 
 
 def draw_detections(frame, detections, analytics):
-    """Draw detection boxes and per-person status labels on an RGB frame."""
+    # Draw person boxes and PPE boxes with confidence labels.
+    output = frame.copy()
 
-    # Copy the frame so the source image remains unchanged.
-    annotated = frame.copy()
-
-    # Draw the detected people and their current potential compliance status.
-    for person in analytics["person_results"]:
+    for person, result in zip(
+        detections["people"],
+        analytics["person_results"]
+    ):
         x1, y1, x2, y2 = person["bbox"]
-        color = (0, 180, 0) if person["compliant"] else (255, 140, 0)
 
-        # Draw the person bounding box.
-        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
+        if result["potentially_compliant"]:
+            color = (0, 200, 0)
+            label = "Potentially compliant"
+        else:
+            color = (255, 150, 0)
+            label = "PPE check required"
 
-        # Add a concise status label above the person box.
-        status = (
-            "Potentially compliant"
-            if person["compliant"]
-            else "PPE check required"
-        )
-        label = f"Person {person['person_id']}: {status}"
+        cv2.rectangle(output, (x1, y1), (x2, y2), color, 2)
 
         cv2.putText(
-            annotated,
+            output,
             label,
-            (x1, max(20, y1 - 8)),
+            (x1, max(y1 - 10, 20)),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            0.55,
             color,
-            2,
-            cv2.LINE_AA,
+            2
         )
 
-    # Draw PPE boxes and model confidence scores.
+    # Draw detected PPE objects.
     for item in detections["ppe_items"]:
         x1, y1, x2, y2 = item["bbox"]
-        color = (0, 200, 255)
-        label = f"{item['class_name']} {item['confidence']:.2f}"
 
-        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(
-            annotated,
-            label,
-            (x1, max(20, y1 - 5)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            color,
-            2,
-            cv2.LINE_AA,
+        label = (
+            f"{item['class_name']} "
+            f"{item['confidence']:.2f}"
         )
 
-    # Return the annotated RGB image.
-    return annotated
+        cv2.rectangle(output, (x1, y1), (x2, y2), (0, 200, 255), 2)
+
+        cv2.putText(
+            output,
+            label,
+            (x1, max(y1 - 5, 15)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (0, 200, 255),
+            2
+        )
+
+    return output
