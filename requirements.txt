@@ -1,7 +1,6 @@
-
-ultralytics
-huggingface_hub
 streamlit
+ultralytics==8.4.192
+huggingface_hub
 opencv-python-headless
 numpy
 Pillow
