@@ -46,6 +46,7 @@ The application detects people and PPE items in uploaded images and videos, asso
                          v
                   Streamlit Dashboard
 ```
+(screenshots/result.jpg)
 
 ## Models
 
